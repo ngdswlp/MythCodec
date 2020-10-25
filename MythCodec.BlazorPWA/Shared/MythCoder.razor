@@ -1,0 +1,100 @@
+﻿@using MythCodec.Lib;
+@inject IJSRuntime JSRuntime
+<h3>使用《@PageName》谜钥(容量 @length bit)</h3>
+<div class="form-group">
+    <a href="javascript:void(0);" @onclick="OnCollapse">@(collapse=="collapse"?"查看谜钥":"收起谜钥")</a>
+    <div id="model" class="@collapse">
+        <textarea class="form-control" rows="15" @bind="ModelText" disabled="@(!AllowCustomModel)" placeholder="在这里输入任意文本作为谜钥"></textarea>
+    </div>
+    输入需要加谜的文本，或者需要解谜的文本：
+    <textarea class="form-control" rows="15" @bind="contentText"></textarea>
+    <div class="form-inline">
+        <div class="custom-control custom-switch" title="">
+            <input type="checkbox" class="custom-control-input" id="customSwitch1" @bind="fixMode"/>
+            <label class="custom-control-label" for="customSwitch1">定长模式(加谜结果保持固定长度，容量取决于谜钥)</label>
+        </div>
+        <button class="btn btn-lg btn-outline-primary form-control" @onclick="Encode">加谜</button>
+        <button class="btn btn-lg btn-outline-primary form-control" @onclick="Decode">解谜</button>
+    </div>
+</div>
+@code{
+    private string modelText;
+    [Parameter]
+    public string ModelText{
+        get=>modelText;
+        set{
+            modelText = value;
+            OnModelChanged();
+        }
+    }
+    [Parameter]
+    public string PageName { get; set; }
+    [Parameter]
+    public bool AllowCustomModel { get; set; }
+
+    private bool fixMode;
+
+    private string collapse;
+    private int length;
+    private string contentText;
+    private MythMan mm;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        collapse = AllowCustomModel ? "" : "collapse";
+        if (AllowCustomModel)
+        {
+            LoadKeyAsync();
+        }
+    }
+
+    private async void LoadKeyAsync()
+    {
+        ModelText = await JSRuntime.InvokeAsync<string>("GetCookie", "key");
+        StateHasChanged();
+    }
+    private void SaveKeyAsync(string key)
+    {
+        JSRuntime.InvokeVoidAsync("SetCookie", "key", key, 30);
+    }
+    private void OnCollapse()
+    {
+        collapse = collapse=="collapse" ? "" : "collapse";
+    }
+    /// <summary>
+    /// 谜钥改变，重新计算容量
+    /// </summary>
+    private void OnModelChanged()
+    {
+        mm = new MythMan(modelText);
+        length = mm.BitLength;
+        if (AllowCustomModel)
+        {
+            SaveKeyAsync(modelText);
+        }
+    }
+    private void Decode()
+    {
+        try
+        {
+            mm.Extended = !fixMode;
+            contentText = mm?.Translate(contentText);
+        }
+        catch(Exception _)
+        {
+            JSRuntime.InvokeVoidAsync("Alert", _.Message);
+        }
+    }
+    private void Encode()
+    {
+        try
+        {
+            mm.Extended = !fixMode;
+            contentText = mm?.Surprise(contentText);
+        }
+        catch (Exception _)
+        {
+            JSRuntime.InvokeVoidAsync("Alert", _.Message);
+        }
+    }
+}
