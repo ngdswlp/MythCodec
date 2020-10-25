@@ -11,8 +11,9 @@
   - [内容列表](#内容列表)
   - [背景](#背景)
   - [使用说明](#使用说明)
-  - [使用许可](#使用许可)
   - [示例](#示例)
+  - [使用许可](#使用许可)
+  - [链接](#链接)
 
 ## 背景
 ---
@@ -36,3 +37,11 @@
 ## 使用许可
 ---
 [WTFPL](LICENSE) © ngdswlp
+
+## 链接
+---
+[在线编解码](https://ngdswlp.github.io)
+Blazor PWA on Github Pages
+
+[Windows版](https://github.com/ngdswlp/MythCodec/releases)
+需要 .net 4
